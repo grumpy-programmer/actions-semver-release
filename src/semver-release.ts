@@ -21,9 +21,10 @@ export class SemverRelease {
 
     const commits = await this.getCommitFromHeadToTag(tag);
 
-    const messages = commits.reverse()
-      .slice(1)
-      .map(c => c.commit.message);
+    const messages = commits.slice(0, -1)
+      .map(c => c.commit.message)
+      .map(m => m.replace(/\r/g, ''))
+      .map(m => m.replace(/\n\n/g, '\n'));
 
     const version = this.getVersionFromMessages(tag, messages);
     if (version != null) {
