@@ -1,0 +1,22 @@
+{
+  "name": "actions-semver-release",
+  "version": "0.0.1",
+  "description": "Github semantic version release",
+  "main": "lib/actions-semver-release.js",
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "yarn install --production --modules-folder dist/node_modules",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.0",
+    "semver": "^6.3.0",
+    "typed-rest-client": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.7",
+    "@types/semver": "^6.2.0",
+    "typescript": "^3.7.2"
+  }
+}
