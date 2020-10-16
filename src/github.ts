@@ -36,7 +36,6 @@ export class GithubService {
       tag_name: tag,
       name: tag,
       body: body,
-      target_commitish: 'master',
       draft: false,
       prerelease: false
     })
