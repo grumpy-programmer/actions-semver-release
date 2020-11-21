@@ -11,6 +11,8 @@ inputs:
     required: false
     default: 'v'
 outputs:
+  tag:
+    description: 'New tag'
   version:
     description: 'New version'
   released:
