@@ -11220,18 +11220,22 @@ function main() {
             messages.pop();
         }
         const oldVersion = version_1.Version.parse(release === null || release === void 0 ? void 0 : release.tag_name, initVersion);
-        core.info(`last version: ${oldVersion.toString(tagPrefix)}`);
+        const oldTag = oldVersion.toTag(tagPrefix);
+        core.info(`last version: ${oldTag}`);
         const newVersion = increaseVersionByMessages(oldVersion, messages);
-        const version = newVersion.toString(tagPrefix);
+        const tag = newVersion.toTag(tagPrefix);
+        const version = newVersion.toString();
         const released = newVersion.isIncreased();
         if (released) {
-            core.info(`new version: ${version}`);
+            core.info(`new version: ${version}, tag: ${tag}`);
         }
         else {
             core.info('no new version');
         }
+        core.setOutput('tag', tag);
         core.setOutput('version', version);
         core.setOutput('released', released);
+        core.saveState('tag', tag);
         core.saveState('version', version);
         core.saveState('released', released);
         core.saveState('messages', messages);
@@ -11305,7 +11309,10 @@ class Version {
     isIncreased() {
         return this.increased;
     }
-    toString(prefix = 'v') {
+    toString() {
+        return this.version.format();
+    }
+    toTag(prefix = 'v') {
         const version = this.version.format();
         return `${prefix}${version}`;
     }

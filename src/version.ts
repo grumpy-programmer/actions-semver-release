@@ -33,7 +33,11 @@ export class Version {
     return this.increased;
   }
 
-  public toString(prefix: string = 'v'): string {
+  public toString(): string {
+    return this.version.format();
+  }
+
+  public toTag(prefix: string = 'v'): string {
     const version = this.version.format();
     return `${prefix}${version}`;
   }

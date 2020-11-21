@@ -9064,12 +9064,13 @@ const github_1 = __webpack_require__(978);
 const github = new github_1.GithubService();
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
+        const tag = getState('tag');
         const version = getState('version');
         const released = getParsedState('released');
         const messages = getParsedState('messages');
         if (released) {
-            core.info(`Release: ${version}`);
-            yield createRelease(version, messages);
+            core.info(`release version: ${version}, tag: ${tag}`);
+            yield createRelease(tag, messages);
         }
     });
 }
