@@ -4,14 +4,15 @@ import { GithubService } from './github';
 const github = new GithubService();
 
 async function main() {
+  const tag = getState('tag');
   const version = getState('version');
   const released = getParsedState<boolean>('released');
   const messages = getParsedState<string[]>('messages');
 
   if (released) {
-    core.info(`Release: ${version}`);
+    core.info(`release version: ${version}, tag: ${tag}`);
 
-    await createRelease(version, messages);
+    await createRelease(tag, messages);
   }
 }
 

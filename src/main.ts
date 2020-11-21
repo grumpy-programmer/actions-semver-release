@@ -28,23 +28,27 @@ async function main() {
   }
 
   const oldVersion = Version.parse(release?.tag_name, initVersion);
+  const oldTag = oldVersion.toTag(tagPrefix);
 
-  core.info(`last version: ${oldVersion.toString(tagPrefix)}`);
+  core.info(`last version: ${oldTag}`);
 
   const newVersion = increaseVersionByMessages(oldVersion, messages);
 
-  const version = newVersion.toString(tagPrefix);
+  const tag = newVersion.toTag(tagPrefix);
+  const version = newVersion.toString();
   const released = newVersion.isIncreased();
 
   if (released) {
-    core.info(`new version: ${version}`);
+    core.info(`new version: ${version}, tag: ${tag}`);
   } else {
     core.info('no new version');
   }
 
+  core.setOutput('tag', tag);
   core.setOutput('version', version);
   core.setOutput('released', released);
 
+  core.saveState('tag', tag);
   core.saveState('version', version);
   core.saveState('released', released);
   core.saveState('messages', messages);
