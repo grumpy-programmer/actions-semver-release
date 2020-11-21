@@ -9065,8 +9065,8 @@ const github = new github_1.GithubService();
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const version = getState('version');
-        const released = getState('released');
-        const messages = getState('messages');
+        const released = getParsedState('released');
+        const messages = getParsedState('messages');
         if (released) {
             core.info(`Release: ${version}`);
             yield createRelease(version, messages);
@@ -9080,9 +9080,14 @@ function createRelease(tag, messages) {
         yield github.createRelease(tag, body);
     });
 }
+function getParsedState(key) {
+    const state = getState(key);
+    return JSON.parse(state);
+}
 function getState(key) {
     const state = core.getState(key);
-    return JSON.parse(state);
+    core.debug(`state: ${key} = ${state}`);
+    return state;
 }
 main()
     .catch(e => core.error(e));
