@@ -29,7 +29,11 @@ function getParsedState<T>(key: string): T {
 }
 
 function getState(key: string): string {
-  return core.getState(key);
+  const state = core.getState(key);
+
+  core.debug(`state: ${key} = ${state}`);
+
+  return state;
 }
 
 main()
