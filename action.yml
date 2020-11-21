@@ -4,15 +4,18 @@ author: 'Grumpy Programmer'
 inputs:
   init-version:
     description: 'The init version of project default 0.0.0'
+    required: false
     default: '0.0.0'
   tag-prefix:
     description: 'The prefix of version tag, default v'
+    required: false
     default: 'v'
 outputs:
-  old-version:
-    description: 'Old version'
-  new-version:
+  version:
     description: 'New version'
+  released:
+    description: 'If new version was released'
 runs:
   using: 'node12'
-  main: 'dist/index.js'
+  main: 'dist/main/index.js'
+  post: 'dist/post/index.js'

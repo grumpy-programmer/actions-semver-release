@@ -11219,15 +11219,22 @@ function main() {
         if (commit !== undefined) {
             messages.pop();
         }
-        const version = version_1.Version.parse(release === null || release === void 0 ? void 0 : release.tag_name, initVersion);
-        const newVersion = increaseVersionByMessages(version, messages);
-        core.setOutput('old-version', version.toString(tagPrefix));
-        core.setOutput('new-version', newVersion.toString(tagPrefix));
-        if (newVersion.isIncreased()) {
-            core.info(`Release: ${version.toString(tagPrefix)} -> ${newVersion.toString(tagPrefix)}`);
-            const tag = newVersion.toString(tagPrefix);
-            yield createRelease(tag, messages);
+        const oldVersion = version_1.Version.parse(release === null || release === void 0 ? void 0 : release.tag_name, initVersion);
+        core.info(`last version: ${oldVersion.toString(tagPrefix)}`);
+        const newVersion = increaseVersionByMessages(oldVersion, messages);
+        const version = newVersion.toString(tagPrefix);
+        const released = newVersion.isIncreased();
+        if (released) {
+            core.info(`new version: ${version}`);
         }
+        else {
+            core.info('no new version');
+        }
+        core.setOutput('version', version);
+        core.setOutput('released', released);
+        core.saveState('version', version);
+        core.saveState('released', released);
+        core.saveState('messages', messages);
     });
 }
 function getReleaseCommit(release) {
@@ -11260,13 +11267,6 @@ function increaseVersionByMessages(version, messages) {
         return version.increasePatch();
     }
     return version;
-}
-function createRelease(tag, messages) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const changelog = messages.map(m => `* ${m}\n`).join('');
-        const body = `**Changelog:**\n${changelog}`;
-        yield github.createRelease(tag, body);
-    });
 }
 main()
     .catch(e => core.error(e));

@@ -27,20 +27,27 @@ async function main() {
     messages.pop();
   }
 
-  const version = Version.parse(release?.tag_name, initVersion);
+  const oldVersion = Version.parse(release?.tag_name, initVersion);
 
-  const newVersion = increaseVersionByMessages(version, messages);
+  core.info(`last version: ${oldVersion.toString(tagPrefix)}`);
 
-  core.setOutput('old-version', version.toString(tagPrefix));
-  core.setOutput('new-version', newVersion.toString(tagPrefix));
+  const newVersion = increaseVersionByMessages(oldVersion, messages);
 
-  if (newVersion.isIncreased()) {
-    core.info(`Release: ${version.toString(tagPrefix)} -> ${newVersion.toString(tagPrefix)}`);
+  const version = newVersion.toString(tagPrefix);
+  const released = newVersion.isIncreased();
 
-    const tag = newVersion.toString(tagPrefix);
-
-    await createRelease(tag, messages);
+  if (released) {
+    core.info(`new version: ${version}`);
+  } else {
+    core.info('no new version');
   }
+
+  core.setOutput('version', version);
+  core.setOutput('released', released);
+
+  core.saveState('version', version);
+  core.saveState('released', released);
+  core.saveState('messages', messages);
 }
 
 async function getReleaseCommit(release?: ReposGetLatestReleaseResponseData): Promise<ReposGetCommitResponseData | undefined> {
@@ -80,13 +87,6 @@ function increaseVersionByMessages(version: Version, messages: string[]): Versio
   }
 
   return version;
-}
-
-async function createRelease(tag: string, messages: string[]) {
-  const changelog = messages.map(m => `* ${m}\n`).join('');
-  const body = `**Changelog:**\n${changelog}`;
-
-  await github.createRelease(tag, body);
 }
 
 main()
