@@ -9,12 +9,14 @@ export class Version {
     this.increased = increased;
   }
 
-  public static parse(version?: string, initVersion: string = '0.0.0') {
+  public static parse(version?: string, initVersion: string = '0.0.0', prefix: string = 'v') {
     if (version === undefined) {
       return new Version(new SemVer(initVersion));
     }
 
-    return new Version(new SemVer(version));
+    const versionWithoutPrefix = version.replace(prefix, '');
+
+    return new Version(new SemVer(versionWithoutPrefix));
   }
 
   public increaseMajor(): Version {
