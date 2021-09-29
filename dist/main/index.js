@@ -12746,6 +12746,10 @@ var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arg
 
 
 
+const EXCLAMATION_MARK_BRAKING_CHANGE_REGEX = new RegExp(/^.+!: /);
+const BRAKING_CHANGE_REGEX = new RegExp(/.*BREAKING CHANGE.*/);
+const FIX_REGEX = new RegExp(/^fix(|\(.+\)): /);
+const FEATURE_REGEX = new RegExp(/^feat(|\(.+\)): /);
 const main_github = new GithubService();
 function main() {
     var _a, _b;
@@ -12824,16 +12828,25 @@ function extractMessages(commits) {
         .map(m => m.replace(/\n\n/g, '\n'));
 }
 function increaseVersionByMessages(version, messages) {
-    if (messages.findIndex(m => m.indexOf('BREAKING CHANGE') >= 0) >= 0) {
+    if (messages.findIndex(breakingChangeTest) >= 0) {
         return version.increaseMajor();
     }
-    if (messages.findIndex(m => m.startsWith('feat')) >= 0) {
+    if (messages.findIndex(featureTest) >= 0) {
         return version.increaseMinor();
     }
-    if (messages.findIndex(m => m.startsWith('fix')) >= 0) {
+    if (messages.findIndex(fixTest) >= 0) {
         return version.increasePatch();
     }
     return version;
+}
+function breakingChangeTest(message) {
+    return EXCLAMATION_MARK_BRAKING_CHANGE_REGEX.test(message) || BRAKING_CHANGE_REGEX.test(message);
+}
+function featureTest(message) {
+    return FEATURE_REGEX.test(message);
+}
+function fixTest(message) {
+    return FIX_REGEX.test(message);
 }
 main()
     .catch(e => core.error(e));

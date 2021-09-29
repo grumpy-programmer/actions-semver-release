@@ -2,6 +2,11 @@ import * as core from '@actions/core';
 import { CommitResponse, GithubService, Release } from './github';
 import { Version } from './version';
 
+const EXCLAMATION_MARK_BRAKING_CHANGE_REGEX = new RegExp(/^.+!: /);
+const BRAKING_CHANGE_REGEX = new RegExp(/.*BREAKING CHANGE.*/);
+const FIX_REGEX = new RegExp(/^fix(|\(.+\)): /);
+const FEATURE_REGEX = new RegExp(/^feat(|\(.+\)): /);
+
 const github = new GithubService();
 
 async function main() {
@@ -107,19 +112,31 @@ function extractMessages(commits: CommitResponse[]): string[] {
 }
 
 function increaseVersionByMessages(version: Version, messages: string[]): Version {
-  if (messages.findIndex(m => m.indexOf('BREAKING CHANGE') >= 0) >= 0) {
+  if (messages.findIndex(breakingChangeTest) >= 0) {
     return version.increaseMajor();
   }
 
-  if (messages.findIndex(m => m.startsWith('feat')) >= 0) {
+  if (messages.findIndex(featureTest) >= 0) {
     return version.increaseMinor();
   }
 
-  if (messages.findIndex(m => m.startsWith('fix')) >= 0) {
+  if (messages.findIndex(fixTest) >= 0) {
     return version.increasePatch();
   }
 
   return version;
+}
+
+function breakingChangeTest(message: string): boolean {
+  return EXCLAMATION_MARK_BRAKING_CHANGE_REGEX.test(message) || BRAKING_CHANGE_REGEX.test(message);
+}
+
+function featureTest(message: string): boolean {
+  return FEATURE_REGEX.test(message);
+}
+
+function fixTest(message: string): boolean {
+  return FIX_REGEX.test(message);
 }
 
 main()
