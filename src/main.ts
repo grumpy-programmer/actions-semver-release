@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { CommitResponse, GithubService, Release } from './github';
+import { Commit, GithubService, Release } from './github';
 import { Version } from './version';
 
 const EXCLAMATION_MARK_BRAKING_CHANGE_REGEX = new RegExp(/^.+!: /);
@@ -7,7 +7,7 @@ const BRAKING_CHANGE_REGEX = new RegExp(/.*BREAKING CHANGE.*/);
 const FIX_REGEX = new RegExp(/^fix(|\(.+\)): /);
 const FEATURE_REGEX = new RegExp(/^feat(|\(.+\)): /);
 
-const github = new GithubService();
+const github = GithubService.create();
 
 async function main() {
   const initVersion = core.getInput('init-version') || '0.0.0';
@@ -88,7 +88,7 @@ function getLatestRelease(releases: Release[], prefix: string): Release | undefi
     .pop();
 }
 
-async function getReleaseCommit(release?: Release): Promise<CommitResponse | undefined> {
+async function getReleaseCommit(release?: Release): Promise<Commit | undefined> {
   if (release === undefined) {
     return;
   }
@@ -104,7 +104,7 @@ async function getReleaseCommit(release?: Release): Promise<CommitResponse | und
   return github.getCommit(tag.commit.sha);
 }
 
-function extractMessages(commits: CommitResponse[]): string[] {
+function extractMessages(commits: Commit[]): string[] {
   return commits
     .map(commit => commit.commit.message)
     .map(m => m.replace(/\r/g, ''))
