@@ -1,55 +1,32 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
+import { components } from '@octokit/openapi-types/types.d';
 
-export interface Release {
-  tag_name: string;
-  created_at: string;
-  published_at: string | null;
-}
-
-export interface CreatedReleaseResponse {
-
-}
-
-export type TagResponse = Tag[]
-
-export interface Tag {
-  name: string;
-  commit: TagCommit;
-}
-
-export interface TagCommit {
-  sha: string;
-}
-
-export interface CommitResponse {
-  sha: string;
-  commit: Commit;
-}
-
-export interface Commit {
-  message: string;
-  author: Author | null;
-}
-
-export interface Author {
-  date?: string;
-}
+export type Tag = components['schemas']['tag'];
+export type Commit = components['schemas']['commit'];
+export type Release = components['schemas']['release'];
+export type ReleaseAsset = components['schemas']['release-asset'];
 
 export class GithubService {
   private readonly client: InstanceType<typeof GitHub>;
   private readonly owner: string;
   private readonly repo: string;
 
-  constructor() {
-    [this.owner, this.repo] = this.getOwnerAndRepo();
-
-    const token = this.getToken();
+  constructor(owner: string, repo: string, token: string) {
+    this.owner = owner;
+    this.repo = repo;
 
     core.debug(`github: creating client owner: ${this.owner}, repo: ${this.repo}, token: ${token.length > 0 ? 'present' : 'not present'}`);
 
     this.client = github.getOctokit(token);
+  }
+
+  public static create(): GithubService {
+    const [owner, repo] = GithubService.getOwnerAndRepo();
+    const token = GithubService.getToken();
+
+    return new GithubService(owner, repo, token);
   }
 
   public async getLatestRelease(): Promise<Release | undefined> {
@@ -107,7 +84,7 @@ export class GithubService {
     return releases;
   }
 
-  public async createRelease(tag: string, body: string): Promise<CreatedReleaseResponse> {
+  public async createRelease(tag: string, body: string): Promise<Release> {
     core.debug(`github: creating release with tag: ${tag}`);
 
     return this.client.rest.repos.createRelease({
@@ -122,7 +99,18 @@ export class GithubService {
       .then(response => response.data);
   }
 
-  public async getTags(): Promise<TagResponse> {
+  public async uploadReleaseAsset(releaseId: number, name: string, data: any): Promise<ReleaseAsset> {
+    return this.client.rest.repos.uploadReleaseAsset({
+      owner: this.owner,
+      repo: this.repo,
+      release_id: releaseId,
+      name: name,
+      data: data
+    })
+      .then(response => response.data);
+  }
+
+  public async getTags(): Promise<Tag[]> {
     core.debug('github: getting tags');
 
     const tags = await this.client.rest.repos.listTags({
@@ -136,7 +124,7 @@ export class GithubService {
     return tags;
   }
 
-  public async getCommit(sha: string): Promise<CommitResponse> {
+  public async getCommit(sha: string): Promise<Commit> {
     core.debug(`github: getting commit sha: ${sha}`);
 
     const commit = await this.client.rest.repos.getCommit({
@@ -151,7 +139,7 @@ export class GithubService {
     return commit;
   }
 
-  public async getCommits(since?: string): Promise<CommitResponse[]> {
+  public async getCommits(since?: string): Promise<Commit[]> {
     core.debug(`github: getting commits since: ${since}`);
 
     const commits = await this.client.rest.repos.listCommits({
@@ -166,16 +154,7 @@ export class GithubService {
     return commits;
   }
 
-  private getToken(): string {
-    const token = process.env.GITHUB_TOKEN;
-    if (token == undefined) {
-      throw new Error('env var GITHUB_TOKEN not found');
-    }
-
-    return token;
-  }
-
-  private getOwnerAndRepo(): string[] {
+  private static getOwnerAndRepo(): string[] {
     const repository = process.env.GITHUB_REPOSITORY;
     if (repository == undefined) {
       throw new Error('env var GITHUB_REPOSITORY not found');
@@ -186,5 +165,14 @@ export class GithubService {
     }
 
     return repository.split('/');
+  }
+
+  private static getToken(): string {
+    const token = process.env.GITHUB_TOKEN;
+    if (token == undefined) {
+      throw new Error('env var GITHUB_TOKEN not found');
+    }
+
+    return token;
   }
 }

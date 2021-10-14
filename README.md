@@ -1,1 +1,227 @@
-# actions-semver-release
+# Semver Release Action
+
+GitHub action using [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+to [semantic versioning](https://semver.org/spec/v2.0.0.html) repository.
+
+**Features:**
+
+- detects version increment by commit message keywords: `fix:` to increase path version, `feat:` to increase minor and `!`
+  or `BREAKING CHANGE` to increment major,
+- exposes `tag`, `version` and `released` output useful for docker image or package versioning,
+- after detection version increase creates GitHub release and gives the option to upload files as release assets.
+
+## Usage by example
+
+Let's assume we have a project written in golang, and we want to version it.
+
+Before adding `actions-semver-release`, the action looks like this:
+
+```yaml
+name: main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - name: docker login
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: set up go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: build
+        run: make build
+
+      - name: docker build
+        run: docker build -t my-repository/my-image
+
+      - name: docker push
+        run: |
+          docker push my-repository/my-image
+```
+
+### Creating release
+
+Simple usage of `actions-semver-release` only for create releases:
+
+```yaml
+      # ...
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: semver
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # token is mandatory to create the release
+
+      - name: build
+        run: make build
+
+      - name: docker build
+        run: docker build -t my-repository/my-image
+
+      - name: docker push
+        run: |
+          docker push my-repository/my-image
+```
+
+### Push new image only on the new version
+
+Making the step execution dependent on the new version release:
+
+```yaml
+      # ...
+      - name: semver
+        id: semver # required to use the output in other steps
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: build
+        run: make build
+
+      - name: docker build
+        run: docker build -t my-repository/my-image
+
+      - name: docker push
+        if: ${{ steps.semver.outputs.released == 'true' }}
+        run: |
+          docker push my-repository/my-image
+```
+
+### Using version
+
+Version output from `actions-semver-release` could be used to add the version as a docker image tag:
+
+```yaml
+      # ...
+      - name: semver
+        id: semver
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: build
+        run: make build
+
+      - name: docker build
+        run: docker build -t my-repository/my-image
+
+      - name: docker push
+        if: ${{ steps.semver.outputs.released == 'true' }} # check if a new version will be released
+        # docker tag command is required to add version as the image tag
+        run: |
+          docker tag my-repository/my-image my-repository/my-image:${{ steps.semver.outputs.version }} 
+          docker push my-repository/my-image:${{ steps.semver.outputs.version }}
+```
+
+Output could be set to env:
+
+```yaml
+      # ...
+      - name: docker push
+        if: ${{ steps.semver.outputs.released == 'true' }}
+        env:
+          VERSION: ${{ steps.semver.outputs.version }} # setting version as env simplify usage
+        run: |
+          docker tag my-repository/my-image my-repository/my-image:${VERSION}
+          docker push my-repository/my-image:${VERSION}
+```
+
+### Uploading assets
+
+Adding dist files as release assets:
+
+```yaml
+      # ...
+      - name: semver
+        id: semver
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          assets: dist/*
+
+      - name: build
+        run: make build
+
+      - name: dist
+        run: make dist
+
+      - name: docker build
+        run: docker build -t my-repository/my-image
+      # ...
+```
+
+Multiple assets:
+
+```yaml
+      # ...
+      - name: semver
+        id: semver
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          assets: |
+            dist/*darwin_amd64.zip
+            dist/*linux_arm64.zip
+      # ...
+```
+
+All zip files assuming that dist has subdirectories:
+
+```yaml
+      # ...
+      - name: semver
+        id: semver
+        uses: grumpy-programmer/actions-semver-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          assets: |
+            dist/**/*.zip
+      # ...
+```
+
+## Action input
+
+| input        | type             | default | description                                                             |
+|--------------|------------------|---------|-------------------------------------------------------------------------|
+| init-version | string           | 0.0.0   | initial version of the project                                          |
+| tag-prefix   | string           | v       | tag prefix, useful for versioning multiple components in one repository |
+| assets       | multiline string |         | list of files to be upload as assets                                    |
+
+## Action output
+
+| output   | type   | example | description                                     |
+|----------|--------|---------|-------------------------------------------------|
+| tag      | string | v0.1.0  | tag-prefix + version                            |
+| version  | string | 0.1.0   | new version or current version if not increased |
+| released | bool   | true    | if release will be create                       |
