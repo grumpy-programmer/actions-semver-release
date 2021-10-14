@@ -10,7 +10,23 @@ to [semantic versioning](https://semver.org/spec/v2.0.0.html) repository.
 - exposes `tag`, `version` and `released` output useful for docker image or package versioning,
 - after detection version increase creates GitHub release and gives the option to upload files as release assets.
 
-## Usage by example
+## Conventional commits
+
+Conventional commits allow project versioning using keywords in the commit message.
+
+The standard defines two specific keywords which presence in the commit message causes the version to increase: `fix` will increase path
+and `feat:` minor version number. Increasing the major number is done by adding `!` to any keyword e.g. `refactor!:` or
+adding `BREAKING CHANGE` to the commit message.
+
+The standard does not limit keywords apart from `fix:` and `feat:`, the following are common: `build:`, `chore:`, `ci:`, `docs:`, `style:`
+, `refactor:`, `perf:`, `test:`.
+
+Apart from the simple form of the keyword e.g. `refactor:`, it is possible to add the component affected by the change
+e.g. `refactor(payment):` where payment is the component name.
+
+For more information visit [conventional commits documentation](https://www.conventionalcommits.org/en/v1.0.0/).
+
+## Action by example
 
 Let's assume we have a project written in golang, and we want to version it.
 
@@ -210,7 +226,12 @@ All zip files assuming that dist has subdirectories:
       # ...
 ```
 
-## Action input
+## Action details
+
+The `version` and `tag` available in the output are set when declaring the action (`main`), release, and sending assets takes place after
+successful completion of all steps and detection of a new version (`post`).
+
+### Input
 
 | input        | type             | default | description                                                             |
 |--------------|------------------|---------|-------------------------------------------------------------------------|
@@ -218,7 +239,7 @@ All zip files assuming that dist has subdirectories:
 | tag-prefix   | string           | v       | tag prefix, useful for versioning multiple components in one repository |
 | assets       | multiline string |         | list of files to be upload as assets                                    |
 
-## Action output
+### Output
 
 | output   | type   | example | description                                     |
 |----------|--------|---------|-------------------------------------------------|
