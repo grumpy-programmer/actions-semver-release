@@ -35,6 +35,18 @@ export class Version {
     return this.increased;
   }
 
+  public getMajor(): number {
+    return this.version.major;
+  }
+
+  public getMinor(): number {
+    return this.version.minor;
+  }
+
+  public getPatch(): number {
+    return this.version.patch;
+  }
+
   public toString(): string {
     return this.version.format();
   }

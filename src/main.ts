@@ -53,6 +53,9 @@ async function main() {
 
   const tag = newVersion.toTag(tagPrefix);
   const version = newVersion.toString();
+  const versionMajor = newVersion.getMajor();
+  const versionMinor = newVersion.getMinor();
+  const versionPatch = newVersion.getPatch();
   const released = newVersion.isIncreased();
 
   core.debug(`main: computed tag: ${tag}, version: ${version}, released: ${released}`);
@@ -65,21 +68,20 @@ async function main() {
 
   core.setOutput('tag', tag);
   core.setOutput('version', version);
+  core.setOutput('version-major', versionMajor);
+  core.setOutput('version-minor', versionMinor);
+  core.setOutput('version-patch', versionPatch);
+  core.setOutput('tag-prefix', tagPrefix);
   core.setOutput('released', released);
 
-  core.debug(`main: output tag: ${tag}`);
-  core.debug(`main: output version: ${version}`);
-  core.debug(`main: output released: ${released}`);
+  core.debug(`main: output tag: ${tag}, version: ${version}, version-major: ${versionMajor}, version-minor: ${versionMinor}, version-path: ${versionPatch}, tag-prefix: ${tagPrefix}, released: ${released}`);
 
   core.saveState('tag', tag);
   core.saveState('version', version);
   core.saveState('released', released);
   core.saveState('messages', messages);
 
-  core.debug(`main: state set tag: ${tag}`);
-  core.debug(`main: state set version: ${version}`);
-  core.debug(`main: state set released: ${released}`);
-  core.debug(`main: state set message count: ${messages.length}`);
+  core.debug(`main: state set tag: ${tag}, version: ${version}, released: ${released}, message count: ${messages.length}`);
 }
 
 function getLatestRelease(releases: Release[], prefix: string): Release | undefined {

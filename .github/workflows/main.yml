@@ -1,0 +1,47 @@
+name: branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: configure git
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+
+      - name: set up node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: yarn
+
+      - name: semver
+        id: semver
+        uses: ./
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: get dependencies
+        run: yarn
+
+      - name: build
+        run: yarn build
+
+      - name: show changes
+        run: git status
+
+      - name: commit and push change
+        if: ${{ steps.semver.outputs.released == 'true' }}
+        env:
+          VERSION: ${{ steps.semver.outputs.version }}
+        run: |
+          git add dist
+          git commit -m "Update to ${VERSION}"
+          git push
