@@ -43,5 +43,13 @@ jobs:
           VERSION: ${{ steps.semver.outputs.version }}
         run: |
           git add dist
-          git commit -m "Update to ${VERSION}"
+          git diff-index --quiet HEAD || git commit -m "Release ${VERSION}"
           git push
+
+      - name: update tag
+        if: ${{ steps.semver.outputs.released == 'true' }}
+        env:
+          TAG: ${{ steps.semver.outputs.tag-prefix }}${{ steps.semver.outputs.version-major }}
+        run: |
+          git tag -fa ${TAG} -m "Update ${TAG} tag"
+          git push origin ${TAG} --force
