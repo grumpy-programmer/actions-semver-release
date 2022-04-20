@@ -241,8 +241,12 @@ successful completion of all steps and detection of a new version (`post`).
 
 ### Output
 
-| output   | type   | example | description                                     |
-|----------|--------|---------|-------------------------------------------------|
-| tag      | string | v0.1.0  | tag-prefix + version                            |
-| version  | string | 0.1.0   | new version or current version if not increased |
-| released | bool   | true    | if release will be create                       |
+| output         | type   | example | description                                     |
+|----------------|--------|---------|-------------------------------------------------|
+| tag            | string | v1.2.3  | tag as tag-prefix + version                     |
+| version        | string | 1.2.3   | new version or current version if not released  |
+| version-major  | string | 1       | major part of version                           |
+| version-minor  | string | 2       | minor part of version                           |
+| version-patch  | string | 3       | patch part of version                           |
+| tag-prefix     | string | v       | tag prefix the same as input                    |
+| released       | bool   | true    | true if new version was released                |
