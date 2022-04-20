@@ -250,3 +250,9 @@ successful completion of all steps and detection of a new version (`post`).
 | version-patch  | string | 3       | patch part of version                           |
 | tag-prefix     | string | v       | tag prefix the same as input                    |
 | released       | bool   | true    | true if new version was released                |
+
+
+## Releasing actions with Semver Release Action
+This project is an example of how to implement releasing Github Actions. The main challenge is to commit built in the pipeline javascript code and updating major version tag.
+
+You can check [main.yml](.github/workflows/main.yml) pipeline.
